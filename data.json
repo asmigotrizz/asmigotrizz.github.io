@@ -1,0 +1,18 @@
+{
+    "materials": [
+        {
+            "title": "Introduction to Algorithms",
+            "subject": "Computer Science",
+            "type": "lecture",
+            "file": "cs/lectures/lecture1.pdf",
+            "date": "2023-09-15"
+        },
+        {
+            "title": "Data Structures Assignment 1",
+            "subject": "Computer Science",
+            "type": "assignment",
+            "file": "cs/assignments/assignment1.pdf",
+            "date": "2023-09-20"
+        }
+    ]
+}
