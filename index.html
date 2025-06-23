@@ -1,29 +1,366 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>University Materials</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Materials Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .subject { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        h2 { color: #2c3e50; }
-        ul { list-style-type: none; padding: 0; }
-        li { margin: 5px 0; }
-        a { color: #3498db; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --primary-color: #2563eb;
+            --secondary-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #f3f4f6;
+            --primary-color: #3b82f6;
+            --secondary-color: #2d2d2d;
+            --card-bg: #2d2d2d;
+            --border-color: #4b5563;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-color);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover, button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .material-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .material-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .material-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+        
+        .material-type {
+            padding: 3px 8px;
+            border-radius: 4px;
+            background-color: var(--secondary-color);
+            font-size: 0.8rem;
+        }
+        
+        .no-results {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 40px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            .materials-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>My University Materials</h1>
-    <p>Organized repository of all my course materials</p>
-    
-    <div class="subject">
-        <h2>Computer Science</h2>
-        <ul>
-            <li><a href="cs/lectures/lecture1.pdf">Lecture 1 - Introduction</a></li>
-            <li><a href="cs/assignments/assignment1.pdf">Assignment 1</a></li>
-        </ul>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-graduation-cap"></i> University Materials Hub</h1>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+        
+        <div class="controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search lectures, assignments...">
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="lecture">Lectures</button>
+                <button class="filter-btn" data-filter="assignment">Assignments</button>
+                <button class="filter-btn" data-filter="quiz">Quizzes</button>
+                <button class="filter-btn" data-filter="exam">Exams</button>
+            </div>
+        </div>
+        
+        <div class="materials-grid" id="materialsGrid">
+            <!-- Materials will be added dynamically by JavaScript -->
+            <div class="no-results">Loading materials...</div>
+        </div>
     </div>
-    
-    <!-- Add more subjects as needed -->
+
+    <script>
+        // Sample data - REPLACE THIS WITH YOUR ACTUAL MATERIALS
+        const materials = [
+            {
+                title: "Introduction to Algorithms",
+                subject: "Computer Science",
+                type: "lecture",
+                file: "cs/lectures/lecture1.pdf",
+                date: "2023-09-15"
+            },
+            {
+                title: "Data Structures Assignment 1",
+                subject: "Computer Science",
+                type: "assignment",
+                file: "cs/assignments/assignment1.pdf",
+                date: "2023-09-20"
+            },
+            {
+                title: "Linear Algebra Quiz 1",
+                subject: "Mathematics",
+                type: "quiz",
+                file: "math/quizzes/quiz1.pdf",
+                date: "2023-09-18"
+            },
+            {
+                title: "Quantum Mechanics Lecture 3",
+                subject: "Physics",
+                type: "lecture",
+                file: "physics/lectures/lecture3.pdf",
+                date: "2023-09-22"
+            },
+            {
+                title: "Midterm Exam - Calculus",
+                subject: "Mathematics",
+                type: "exam",
+                file: "math/exams/midterm.pdf",
+                date: "2023-10-05"
+            },
+            {
+                title: "Database Systems Project",
+                subject: "Computer Science",
+                type: "assignment",
+                file: "cs/assignments/project.pdf",
+                date: "2023-10-10"
+            }
+        ];
+
+        // DOM Elements
+        const materialsGrid = document.getElementById('materialsGrid');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Current filter
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        // Initialize the page
+        function init() {
+            renderMaterials();
+            setupEventListeners();
+            checkThemePreference();
+        }
+
+        // Render materials based on current filter and search
+        function renderMaterials() {
+            const filteredMaterials = materials.filter(material => {
+                const matchesFilter = currentFilter === 'all' || material.type === currentFilter;
+                const matchesSearch = material.title.toLowerCase().includes(currentSearch.toLowerCase()) || 
+                                     material.subject.toLowerCase().includes(currentSearch.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredMaterials.length === 0) {
+                materialsGrid.innerHTML = '<div class="no-results">No materials found. Try changing your search or filters.</div>';
+                return;
+            }
+
+            materialsGrid.innerHTML = filteredMaterials.map(material => `
+                <div class="material-card" data-type="${material.type}">
+                    <h3>${material.title}</h3>
+                    <p>${material.subject}</p>
+                    <div class="material-meta">
+                        <span class="material-type">${material.type.charAt(0).toUpperCase() + material.type.slice(1)}</span>
+                        <span>${new Date(material.date).toLocaleDateString()}</span>
+                    </div>
+                    <a href="${material.file}" target="_blank" style="display: none;"></a>
+                </div>
+            `).join('');
+
+            // Add click event to each card to open the file
+            document.querySelectorAll('.material-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const link = card.querySelector('a');
+                    if (link) {
+                        link.click();
+                    }
+                });
+            });
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value;
+                renderMaterials();
+            });
+
+            // Filter buttons
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentFilter = button.dataset.filter;
+                    renderMaterials();
+                });
+            });
+
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Theme management
+        function checkThemePreference() {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateThemeIcon(savedTheme);
+            } else if (prefersDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                updateThemeIcon('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // Initialize the app
+        init();
+    </script>
 </body>
 </html>
