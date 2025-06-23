@@ -201,166 +201,150 @@
             <div class="no-results">Loading materials...</div>
         </div>
     </div>
+<script>
+    // DOM Elements
+    const materialsGrid = document.getElementById('materialsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const themeToggle = document.getElementById('themeToggle');
 
-    <script>
-        // Sample data - REPLACE THIS WITH YOUR ACTUAL MATERIALS
-        const materials = [
-            {
-                title: "Introduction to Algorithms",
-                subject: "Computer Science",
-                type: "lecture",
-                file: "cs/lectures/lecture1.pdf",
-                date: "2023-09-15"
-            },
-            {
-                title: "Data Structures Assignment 1",
-                subject: "Computer Science",
-                type: "assignment",
-                file: "cs/assignments/assignment1.pdf",
-                date: "2023-09-20"
-            },
-            {
-                title: "Linear Algebra Quiz 1",
-                subject: "Mathematics",
-                type: "quiz",
-                file: "math/quizzes/quiz1.pdf",
-                date: "2023-09-18"
-            },
-            {
-                title: "Quantum Mechanics Lecture 3",
-                subject: "Physics",
-                type: "lecture",
-                file: "physics/lectures/lecture3.pdf",
-                date: "2023-09-22"
-            },
-            {
-                title: "Midterm Exam - Calculus",
-                subject: "Mathematics",
-                type: "exam",
-                file: "math/exams/midterm.pdf",
-                date: "2023-10-05"
-            },
-            {
-                title: "Database Systems Project",
-                subject: "Computer Science",
-                type: "assignment",
-                file: "cs/assignments/project.pdf",
-                date: "2023-10-10"
+    // Current filter
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let materials = []; // This will store our loaded materials
+
+    // Initialize the page
+    async function init() {
+        await loadMaterials();
+        renderMaterials();
+        setupEventListeners();
+        checkThemePreference();
+    }
+
+    // Load materials from data.json
+    async function loadMaterials() {
+        try {
+            const response = await fetch('data.json');
+            if (!response.ok) {
+                throw new Error('Failed to load materials data');
             }
-        ];
-
-        // DOM Elements
-        const materialsGrid = document.getElementById('materialsGrid');
-        const searchInput = document.getElementById('searchInput');
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const themeToggle = document.getElementById('themeToggle');
-
-        // Current filter
-        let currentFilter = 'all';
-        let currentSearch = '';
-
-        // Initialize the page
-        function init() {
-            renderMaterials();
-            setupEventListeners();
-            checkThemePreference();
-        }
-
-        // Render materials based on current filter and search
-        function renderMaterials() {
-            const filteredMaterials = materials.filter(material => {
-                const matchesFilter = currentFilter === 'all' || material.type === currentFilter;
-                const matchesSearch = material.title.toLowerCase().includes(currentSearch.toLowerCase()) || 
-                                     material.subject.toLowerCase().includes(currentSearch.toLowerCase());
-                return matchesFilter && matchesSearch;
-            });
-
-            if (filteredMaterials.length === 0) {
-                materialsGrid.innerHTML = '<div class="no-results">No materials found. Try changing your search or filters.</div>';
-                return;
-            }
-
-            materialsGrid.innerHTML = filteredMaterials.map(material => `
-                <div class="material-card" data-type="${material.type}">
-                    <h3>${material.title}</h3>
-                    <p>${material.subject}</p>
-                    <div class="material-meta">
-                        <span class="material-type">${material.type.charAt(0).toUpperCase() + material.type.slice(1)}</span>
-                        <span>${new Date(material.date).toLocaleDateString()}</span>
-                    </div>
-                    <a href="${material.file}" target="_blank" style="display: none;"></a>
+            const data = await response.json();
+            materials = data.materials;
+            
+            // Sort by date (newest first)
+            materials.sort((a, b) => new Date(b.date) - new Date(a.date));
+        } catch (error) {
+            console.error('Error loading materials:', error);
+            materialsGrid.innerHTML = `
+                <div class="no-results">
+                    <p>Error loading materials data.</p>
+                    <p>${error.message}</p>
                 </div>
-            `).join('');
+            `;
+        }
+    }
 
-            // Add click event to each card to open the file
-            document.querySelectorAll('.material-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const link = card.querySelector('a');
-                    if (link) {
-                        link.click();
-                    }
-                });
-            });
+    // Render materials based on current filter and search
+    function renderMaterials() {
+        const filteredMaterials = materials.filter(material => {
+            const matchesFilter = currentFilter === 'all' || material.type === currentFilter;
+            const matchesSearch = material.title.toLowerCase().includes(currentSearch.toLowerCase()) || 
+                                 material.subject.toLowerCase().includes(currentSearch.toLowerCase());
+            return matchesFilter && matchesSearch;
+        });
+
+        if (filteredMaterials.length === 0) {
+            materialsGrid.innerHTML = '<div class="no-results">No materials found. Try changing your search or filters.</div>';
+            return;
         }
 
-        // Set up event listeners
-        function setupEventListeners() {
-            // Search functionality
-            searchInput.addEventListener('input', (e) => {
-                currentSearch = e.target.value;
+        materialsGrid.innerHTML = filteredMaterials.map(material => `
+            <div class="material-card" data-type="${material.type}">
+                <h3>${material.title}</h3>
+                <p>${material.subject}</p>
+                <div class="material-meta">
+                    <span class="material-type">${material.type.charAt(0).toUpperCase() + material.type.slice(1)}</span>
+                    <span>${formatDate(material.date)}</span>
+                </div>
+                <a href="${material.file}" target="_blank" style="display: none;"></a>
+            </div>
+        `).join('');
+
+        // Add click event to each card to open the file
+        document.querySelectorAll('.material-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const link = card.querySelector('a');
+                if (link) {
+                    link.click();
+                }
+            });
+        });
+    }
+
+    // Format date for display
+    function formatDate(dateString) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            renderMaterials();
+        });
+
+        // Filter buttons
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentFilter = button.dataset.filter;
                 renderMaterials();
             });
+        });
 
-            // Filter buttons
-            filterButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    currentFilter = button.dataset.filter;
-                    renderMaterials();
-                });
-            });
+        // Theme toggle
+        themeToggle.addEventListener('click', toggleTheme);
+    }
 
-            // Theme toggle
-            themeToggle.addEventListener('click', toggleTheme);
+    // Theme management
+    function checkThemePreference() {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('theme');
+        
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        } else if (prefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            updateThemeIcon('dark');
         }
+    }
 
-        // Theme management
-        function checkThemePreference() {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const savedTheme = localStorage.getItem('theme');
-            
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                updateThemeIcon(savedTheme);
-            } else if (prefersDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                updateThemeIcon('dark');
-            }
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = themeToggle.querySelector('i');
+        if (theme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
         }
+    }
 
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        }
-
-        function updateThemeIcon(theme) {
-            const icon = themeToggle.querySelector('i');
-            if (theme === 'dark') {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-            }
-        }
-
-        // Initialize the app
-        init();
-    </script>
-</body>
+    // Initialize the app
+    init();
+</script>
+</body>    
 </html>
