@@ -249,7 +249,7 @@ Happy Birthday to the most beautiful person in my life.
 
 <!-- MUSIC -->
 
-<audio loop>
+<audio id="bgMusic" loop>
 <source src="song.mp3" type="audio/mp3">
 </audio>
 
@@ -262,7 +262,12 @@ Happy Birthday to the most beautiful person in my life.
 function startSurprise(){
 
 document.getElementById("startScreen").style.display="none";
-document.querySelector("audio").play();
+
+const music = document.querySelector("audio");
+
+if(music){
+music.play().catch(()=>{});
+}
 
 }
 
